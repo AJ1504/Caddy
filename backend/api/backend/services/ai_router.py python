@@ -1,0 +1,39 @@
+from typing import Dict, Any, List, Optional, Tuple
+from enum import Enum
+import asyncio
+from dataclasses import dataclass
+import json
+from datetime import datetime
+import openai
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.memory import ConversationBufferMemory
+
+class AssistantType(Enum):
+    GENERAL = "general"
+    CAD = "cad"
+    RESEARCH = "research"
+    PROJECT = "project"
+    MANUFACTURING = "manufacturing"
+
+@dataclass
+class AssistantContext:
+    project_id: Optional[str]
+    user_id: str
+    conversation_history: List[Dict[str, str]]
+    current_task: Optional[str]
+    metadata: Dict[str, Any]
+
+class SpecialistAssistant:
+    def __init__(self, assistant_type: AssistantType, model="gpt-4"):
+        self.type = assistant_type
+        self.model = model
+        self.system_prompt = self._get_system_prompt()
+        self.embeddings = OpenAIEmbeddings()
+        self.memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True
+        )
+        
+    def _get_system_prompt(self) -> str:
+        prompts = {
+            AssistantType.CAD: """You are a CAD specialist assistant.
